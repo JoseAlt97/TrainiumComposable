@@ -15,6 +15,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
+// Usamos Double para el monto por si hay decimales, y String para la fecha
 data class PagoInfo(val id: Int, val monto: Double, val fecha: String, val tipo: String, val metodo: String)
 
 @Composable
@@ -29,12 +30,26 @@ fun HistorialScreen(idUsuario: Int, onBack: () -> Unit) {
             val temp = mutableListOf<PagoInfo>()
             if (conn != null) {
                 try {
-                    val rs = conn.prepareStatement("SELECT id, monto, fecha_pago, tipo, metodo_pago FROM pagos WHERE id_usuario = $idUsuario ORDER BY fecha_pago DESC").executeQuery()
+                    // Importante: nombres de columnas exactamente igual a como se definieron en el INSERT
+                    val query = "SELECT id, monto, fecha_pago, tipo, metodo_pago FROM pagos WHERE id_usuario = ? ORDER BY fecha_pago DESC"
+                    val pstmt = conn.prepareStatement(query)
+                    pstmt.setInt(1, idUsuario)
+                    val rs = pstmt.executeQuery()
+
                     while (rs.next()) {
-                        temp.add(PagoInfo(rs.getInt("id"), rs.getDouble("monto"), rs.getString("fecha_pago"), rs.getString("tipo"), rs.getString("metodo_pago")))
+                        temp.add(PagoInfo(
+                            id = rs.getInt("id"),
+                            monto = rs.getDouble("monto"), // Usar getDouble para evitar errores de casteo
+                            fecha = rs.getString("fecha_pago") ?: "",
+                            tipo = rs.getString("tipo") ?: "Plan Premium",
+                            metodo = rs.getString("metodo_pago") ?: "Desconocido"
+                        ))
                     }
-                    conn.close()
-                } catch (e: Exception) { e.printStackTrace() }
+                } catch (e: Exception) {
+                    e.printStackTrace()
+                } finally {
+                    conn.close() // Cerramos siempre en el finally para evitar fugas de memoria
+                }
             }
             withContext(Dispatchers.Main) {
                 listaPagos = temp
@@ -48,16 +63,24 @@ fun HistorialScreen(idUsuario: Int, onBack: () -> Unit) {
             TextButton(onClick = onBack) { Text("← Volver") }
             Text("Mis Pagos", fontSize = 22.sp, fontWeight = FontWeight.Bold)
         }
+
         Spacer(modifier = Modifier.height(16.dp))
 
         if (cargando) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { CircularProgressIndicator() }
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
         } else if (listaPagos.isEmpty()) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) { Text("No hay registros de pago.", color = Color.Gray) }
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("No hay registros de pago.", color = Color.Gray)
+            }
         } else {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(listaPagos) { pago ->
-                    Card(modifier = Modifier.fillMaxWidth()) {
+                    Card(
+                        modifier = Modifier.fillMaxWidth(),
+                        elevation = CardDefaults.cardElevation(2.dp)
+                    ) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                                 Text(pago.tipo, fontWeight = FontWeight.Bold)

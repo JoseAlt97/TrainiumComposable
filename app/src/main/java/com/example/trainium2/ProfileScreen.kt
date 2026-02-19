@@ -22,12 +22,13 @@ fun ProfileScreen(
     onNavigateToMaquinas: (Boolean, Int) -> Unit,
     onNavigateToPlatos: () -> Unit,
     onNavigateToRegistro: (Int) -> Unit,
-    onNavigateToReservas: (Int) -> Unit,
+    // CAMBIO 1: Ahora aceptamos (Boolean, Int) para pasar el estado de admin a las reservas
+    onNavigateToReservas: (Boolean, Int) -> Unit,
     onNavigateToEditProfile: (Int) -> Unit
 ) {
     Box(modifier = Modifier.fillMaxSize().padding(20.dp)) {
 
-        // Icono de Rueda de Ajustes
+        // Botón de ajustes
         IconButton(
             onClick = { onNavigateToEditProfile(idUsuario) },
             modifier = Modifier.align(Alignment.TopEnd)
@@ -40,49 +41,73 @@ fun ProfileScreen(
         }
 
         Column(modifier = Modifier.align(Alignment.TopStart)) {
-            Text(text = "Hola, $nombre", fontSize = 26.sp, fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.primary)
-
-            if (isPremium) {
-                Text(text = "USUARIO PREMIUM", fontSize = 16.sp, fontWeight = FontWeight.ExtraBold, color = Color(0xFFD4AF37))
-            } else {
-                Column {
-                    Text(text = "Usuario no premium", fontSize = 14.sp, color = Color.Gray)
-                    Spacer(modifier = Modifier.height(4.dp))
-                    Button(
-                        onClick = { /* Compra */ },
-                        modifier = Modifier.height(30.dp),
-                        contentPadding = PaddingValues(horizontal = 10.dp, vertical = 0.dp),
-                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
-                    ) {
-                        Text("Comprar", fontSize = 12.sp)
-                    }
-                }
-            }
+            Text(
+                text = "Hola, $nombre",
+                fontSize = 26.sp,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary
+            )
         }
 
+        // Indicador visual de Modo Desarrollador
         if (isAdmin) {
-            Text(text = "Modo desarrollador", fontSize = 12.sp, color = Color.Red, fontWeight = FontWeight.Bold, modifier = Modifier.align(Alignment.TopEnd).padding(top = 45.dp))
+            Text(
+                text = "Modo desarrollador",
+                fontSize = 12.sp,
+                color = Color.Red,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .align(Alignment.TopEnd)
+                    .padding(top = 45.dp)
+            )
         }
 
-        Column(modifier = Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-            Button(onClick = { onNavigateToMaquinas(isAdmin, idUsuario) }, modifier = Modifier.fillMaxWidth(0.8f).height(70.dp)) {
+        // Botonera principal
+        Column(
+            modifier = Modifier.align(Alignment.Center),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Button(
+                onClick = { onNavigateToMaquinas(isAdmin, idUsuario) },
+                modifier = Modifier.fillMaxWidth(0.8f).height(70.dp)
+            ) {
                 Text("Visualizar máquinas", fontSize = 18.sp)
             }
+
             Spacer(modifier = Modifier.height(20.dp))
-            Button(onClick = { onNavigateToReservas(idUsuario) }, modifier = Modifier.fillMaxWidth(0.8f).height(70.dp)) {
+
+            // CAMBIO 2: Pasamos 'isAdmin' y 'idUsuario' al hacer clic
+            Button(
+                onClick = { onNavigateToReservas(isAdmin, idUsuario) },
+                modifier = Modifier.fillMaxWidth(0.8f).height(70.dp)
+            ) {
                 Text("Máquinas reservadas", fontSize = 18.sp)
             }
+
             Spacer(modifier = Modifier.height(20.dp))
-            Button(onClick = { onNavigateToPlatos() }, modifier = Modifier.fillMaxWidth(0.8f).height(70.dp)) {
+
+            Button(
+                onClick = { onNavigateToPlatos() },
+                modifier = Modifier.fillMaxWidth(0.8f).height(70.dp)
+            ) {
                 Text("Recomendación de platos diarias", fontSize = 18.sp)
             }
+
             Spacer(modifier = Modifier.height(20.dp))
-            Button(onClick = { onNavigateToRegistro(idUsuario) }, modifier = Modifier.fillMaxWidth(0.8f).height(70.dp)) {
+
+            Button(
+                onClick = { onNavigateToRegistro(idUsuario) },
+                modifier = Modifier.fillMaxWidth(0.8f).height(70.dp)
+            ) {
                 Text("Mi registro", fontSize = 18.sp)
             }
         }
 
-        Button(onClick = onLogout, modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 20.dp)) {
+        Button(
+            onClick = onLogout,
+            modifier = Modifier.align(Alignment.BottomCenter).padding(bottom = 20.dp)
+        ) {
             Text("Cerrar Sesión")
         }
     }
